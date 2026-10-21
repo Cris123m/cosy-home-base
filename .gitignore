@@ -1,0 +1,21 @@
+# Python venv and caches for tools/
+tools/venv/
+__pycache__/
+
+# ADB private keys: never commit
+tools/adbkey/
+adbkey
+adbkey.pub
+
+# Android / Gradle build output
+.gradle/
+build/
+local.properties
+*.iml
+.idea/
+
+# App APKs stay local only (apps/README.md lists versions and checksums)
+*.apk
+*.apkm
+*.apks
+*.xapk

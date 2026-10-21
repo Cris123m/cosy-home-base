@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Cosy Home</string>
+    <string name="all_apps_hint">All apps and inputs</string>
+    <string name="back_to_clock">Back to home</string>
+    <string name="apps">Apps</string>
+    <string name="inputs">Inputs</string>
+    <string name="ambilight">Ambilight</string>
+    <string name="settings">Settings</string>
+    <string name="live_tv">Live TV</string>
+    <string name="usb">USB</string>
+    <string name="cant_open">Can\'t open %1$s</string>
+    <string name="not_available">Not available on this TV</string>
+    <string name="network">Network</string>
+    <string name="np_open">Open the playing app</string>
+    <string name="np_prev">Previous</string>
+    <string name="np_play_pause">Play or pause</string>
+    <string name="np_next">Next</string>
+    <string name="key_service_label">Cosy Home remote buttons</string>
+    <string name="key_service_description">Opens SmartTube from the remote\'s YouTube button. It only reads the buttons listed in the launcher\'s settings.</string>
+
+    <!-- Weather conditions (WMO codes from Open-Meteo). -->
+    <string name="wx_clear">Clear</string>
+    <string name="wx_mostly_clear">Mostly clear</string>
+    <string name="wx_partly_cloudy">Partly cloudy</string>
+    <string name="wx_overcast">Overcast</string>
+    <string name="wx_fog">Fog</string>
+    <string name="wx_drizzle">Drizzle</string>
+    <string name="wx_freezing_drizzle">Freezing drizzle</string>
+    <string name="wx_light_rain">Light rain</string>
+    <string name="wx_rain">Rain</string>
+    <string name="wx_heavy_rain">Heavy rain</string>
+    <string name="wx_freezing_rain">Freezing rain</string>
+    <string name="wx_snow">Snow</string>
+    <string name="wx_showers">Showers</string>
+    <string name="wx_snow_showers">Snow showers</string>
+    <string name="wx_thunderstorm">Thunderstorm</string>
+    <string name="wx_thunderstorm_hail">Thunderstorm and hail</string>
+</resources>

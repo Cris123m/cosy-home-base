@@ -1,0 +1,1 @@
+  mFocusedApp=ActivityRecord{63d9cce u0 com.google.android.apps.tv.launcherx/.home.HomeActivity t28055}

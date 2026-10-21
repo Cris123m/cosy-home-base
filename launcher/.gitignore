@@ -1,0 +1,19 @@
+# Build output
+.gradle/
+build/
+app/build/
+*.apk
+
+# Local to your machine and your TV
+local.properties
+keystore.properties
+*.jks
+*.keystore
+
+# Editors
+.idea/
+*.iml
+.vscode/
+
+# Your own TV: debloat lists, logs and scripts
+local/

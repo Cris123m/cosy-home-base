@@ -1,0 +1,14 @@
+package:com.apkmirror.helper.prod versionCode:41
+package:com.formulaone.production versionCode:30500001
+package:org.smarttube.stable versionCode:2458
+package:com.alphainventor.filemanager versionCode:2103083
+package:com.spotify.tv.android versionCode:2340200
+package:fi.mtvkatsomo versionCode:207878
+package:com.yle.webtv versionCode:720114
+package:com.cosyhome.tv versionCode:1
+package:com.thirdpresence.ruutu versionCode:82802
+package:fi.mtv.svod versionCode:383
+package:com.yablio.sendfilestotv versionCode:69
+package:com.elisa.viihde.tv versionCode:34970
+package:com.viaplay.android versionCode:2641042
+package:com.disney.disneyplus versionCode:1791228670

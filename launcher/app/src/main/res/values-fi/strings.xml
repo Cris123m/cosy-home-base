@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="all_apps_hint">Kaikki sovellukset ja tulot</string>
+    <string name="back_to_clock">Takaisin aloitusnäyttöön</string>
+    <string name="apps">Sovellukset</string>
+    <string name="inputs">Tulot</string>
+    <string name="ambilight">Ambilight</string>
+    <string name="settings">Asetukset</string>
+    <string name="live_tv">TV</string>
+    <string name="usb">USB</string>
+    <string name="cant_open">Ei voi avata: %1$s</string>
+    <string name="not_available">Ei käytettävissä tässä televisiossa</string>
+    <string name="network">Verkko</string>
+    <string name="np_open">Avaa toistava sovellus</string>
+    <string name="np_prev">Edellinen</string>
+    <string name="np_play_pause">Toista tai keskeytä</string>
+    <string name="np_next">Seuraava</string>
+    <string name="key_service_label">Cosy Home -kaukosäätimen painikkeet</string>
+    <string name="key_service_description">Avaa SmartTuben kaukosäätimen YouTube-painikkeesta. Lukee vain käynnistimen asetuksissa luetellut painikkeet.</string>
+
+    <!-- Sääolot (Open-Meteon WMO-koodit). -->
+    <string name="wx_clear">Selkeää</string>
+    <string name="wx_mostly_clear">Enimmäkseen selkeää</string>
+    <string name="wx_partly_cloudy">Puolipilvistä</string>
+    <string name="wx_overcast">Pilvistä</string>
+    <string name="wx_fog">Sumua</string>
+    <string name="wx_drizzle">Tihkusadetta</string>
+    <string name="wx_freezing_drizzle">Jäätävää tihkua</string>
+    <string name="wx_light_rain">Heikkoa sadetta</string>
+    <string name="wx_rain">Sadetta</string>
+    <string name="wx_heavy_rain">Rankkasadetta</string>
+    <string name="wx_freezing_rain">Jäätävää sadetta</string>
+    <string name="wx_snow">Lumisadetta</string>
+    <string name="wx_showers">Sadekuuroja</string>
+    <string name="wx_snow_showers">Lumikuuroja</string>
+    <string name="wx_thunderstorm">Ukkosta</string>
+    <string name="wx_thunderstorm_hail">Ukkosta ja raekuuroja</string>
+</resources>

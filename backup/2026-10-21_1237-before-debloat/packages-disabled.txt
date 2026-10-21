@@ -1,0 +1,16 @@
+package:com.sony.dtv.my5launcher
+package:com.sony.dtv.homekit
+package:de.hdplus.tvapp.androidtv
+package:com.sony.dtv.soundslauncher
+package:com.sony.dtv.promos
+package:com.sony.dtv.seeds.iot
+package:com.vewd.core.integration.dia
+package:com.apple.atve.sony.appletv
+package:com.sony.dtv.b2b.vendorprotocol
+package:com.youview.poa
+package:com.google.android.youtube.tvmusic
+package:com.sony.dtv.iplayerlauncher
+package:com.sony.dtv.itvlauncher
+package:com.sony.dtv.ardlauncher
+package:com.sony.dtv.b2b.softap
+package:com.sony.dtv.all4launcher
