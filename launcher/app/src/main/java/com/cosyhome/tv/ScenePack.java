@@ -133,6 +133,7 @@ public final class ScenePack {
     private static ScenePack parse(JSONObject o) throws JSONException {
         if (!o.has("spec")) throw new IllegalArgumentException("pack.json missing required \"spec\"");
         int spec = o.getInt("spec");
+        if (spec != SPEC) throw new IllegalArgumentException("unsupported pack spec " + spec + ", engine is spec " + SPEC);
         String id = o.optString("id", "unknown");
 
         Map<String, PackPalette> palettes = new HashMap<>();
@@ -234,7 +235,22 @@ public final class ScenePack {
             "M0,940 C300,880 640,900 900,930 C1160,960 1440,900 1700,905 C1800,907 1880,915 1920,920 L1920,1080 L0,1080 Z";
 
     /** Emergency fallback when even the assets copy fails to parse: never null, never throws. */
+    private static volatile ScenePack cachedBuiltin;
+
     public static ScenePack builtinValle() {
+        ScenePack cached = cachedBuiltin;
+        if (cached != null) return cached;
+        synchronized (ScenePack.class) {
+            cached = cachedBuiltin;
+            if (cached == null) {
+                cached = buildBuiltinValle();
+                cachedBuiltin = cached;
+            }
+            return cached;
+        }
+    }
+
+    private static ScenePack buildBuiltinValle() {
         Map<String, PackPalette> palettes = new HashMap<>();
         palettes.put("dawn", new PackPalette(0xFF2E3A6B, 0xFFC98A9A, 0xFFF6C99A,
                 0xFF7C6A93, 0xFF54497A, 0xFF2E2A4E, 0xFFFFC27A, 0.5f, false));

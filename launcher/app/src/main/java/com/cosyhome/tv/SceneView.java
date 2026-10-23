@@ -93,17 +93,24 @@ public class SceneView extends View {
 
     /** The builtin valley, parsed from assets once; code constants only if the asset fails. */
     private static ScenePack loadBuiltin(Context context) {
+        java.io.InputStream in = null;
         try {
-            java.io.InputStream in = context.getAssets().open("packs/valle/pack.json");
+            in = context.getAssets().open("packs/valle/pack.json");
             java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream(4096);
             byte[] buf = new byte[1024];
             int n;
             while ((n = in.read(buf)) >= 0) out.write(buf, 0, n);
-            in.close();
             return ScenePack.fromJson(out.toString("UTF-8"));
         } catch (Exception e) {
             android.util.Log.w("SceneView", "builtin valle asset failed, using code fallback", e);
             return ScenePack.builtinValle();
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (java.io.IOException ignored) {
+                }
+            }
         }
     }
 

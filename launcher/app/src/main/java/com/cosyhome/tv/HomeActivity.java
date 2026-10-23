@@ -162,6 +162,7 @@ public class HomeActivity extends Activity implements SceneView.Listener {
         appsPanel = findViewById(R.id.appsPanel);
         inputsPanel = findViewById(R.id.inputsPanel);
         scene.setListener(this);
+        applyActivePack(getIntent());
 
         findViewById(R.id.back).setOnClickListener(v -> closeApps());
         View ambilight = findViewById(R.id.ambilight);
@@ -353,6 +354,42 @@ public class HomeActivity extends Activity implements SceneView.Listener {
         if (clock != null) tick();
     }
 
+    // Purpose: load the persisted pack (or an adb preview) into the scene; failures keep the previous pack.
+    private void applyActivePack(Intent intent) {
+        PackStore store = new PackStore(this);
+        String url = intent == null ? null : intent.getStringExtra("packUrl");
+        if (url != null && !url.isEmpty()) {
+            // Network off the main thread; a dead URL toasts and the previous pack keeps rendering.
+            new Thread(() -> {
+                try {
+                    ScenePack pack = store.importUrl(url);
+                    String id = pack.id;
+                    runOnUiThread(() -> {
+                        try {
+                            scene.setPack(store.activate(id));
+                        } catch (Exception e) {
+                            android.util.Log.w("HomeActivity", "packUrl activate failed: " + id, e);
+                        }
+                    });
+                } catch (Exception e) {
+                    android.util.Log.w("HomeActivity", "packUrl import failed: " + url, e);
+                    runOnUiThread(() -> Toast.makeText(this, R.string.not_available, Toast.LENGTH_SHORT).show());
+                }
+            }).start();
+            return;
+        }
+        String id = intent == null ? null : intent.getStringExtra("pack");
+        if (id != null && !id.isEmpty()) {
+            try {
+                scene.setPack(store.activate(id));
+            } catch (Exception e) {
+                android.util.Log.w("HomeActivity", "pack preview failed: " + id, e);
+            }
+            return;
+        }
+        scene.setPack(store.activePack());
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -413,6 +450,7 @@ public class HomeActivity extends Activity implements SceneView.Listener {
         super.onNewIntent(intent);
         readPhaseOverride(intent);
         applyWeather();
+        if (intent != null && (intent.hasExtra("pack") || intent.hasExtra("packUrl"))) applyActivePack(intent);
         if (intent == null || !intent.hasCategory(Intent.CATEGORY_HOME)) return;
         lastDock = 0;
         if (appsOpen) closeApps();
