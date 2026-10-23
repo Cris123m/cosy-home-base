@@ -84,6 +84,8 @@ public class HomeActivity extends Activity implements SceneView.Listener {
     private float density;
 
     private boolean appsOpen;
+    /** Id the scene last rebuilt for; the picker may move prefs while Home is stopped. */
+    private String shownPack;
     /** Survives the activity being recreated while an app is open; resets only with the process. */
     private static int lastDock = 0;
     private static int lastGrid = 0;
@@ -172,6 +174,7 @@ public class HomeActivity extends Activity implements SceneView.Listener {
         }
         ambilight.setOnClickListener(v -> open(new Intent(ambilightAction)));
         findViewById(R.id.settings).setOnClickListener(v -> open(new Intent(Settings.ACTION_SETTINGS)));
+        findViewById(R.id.scenes).setOnClickListener(v -> open(new Intent(this, PacksActivity.class)));
         // The header row is the top of the screen: Up goes nowhere rather than wrapping around.
         View.OnKeyListener topRow = (v, keyCode, e) ->
                 e.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_DPAD_UP;
@@ -357,6 +360,7 @@ public class HomeActivity extends Activity implements SceneView.Listener {
     // Purpose: load the persisted pack (or an adb preview) into the scene; failures keep the previous pack.
     private void applyActivePack(Intent intent) {
         PackStore store = new PackStore(this);
+        shownPack = store.active();
         String url = intent == null ? null : intent.getStringExtra("packUrl");
         if (url != null && !url.isEmpty()) {
             // Network off the main thread; a dead URL toasts and the previous pack keeps rendering.
@@ -367,6 +371,7 @@ public class HomeActivity extends Activity implements SceneView.Listener {
                     runOnUiThread(() -> {
                         try {
                             scene.setPack(store.activate(id));
+                            shownPack = id;
                         } catch (Exception e) {
                             android.util.Log.w("HomeActivity", "packUrl activate failed: " + id, e);
                         }
@@ -382,12 +387,30 @@ public class HomeActivity extends Activity implements SceneView.Listener {
         if (id != null && !id.isEmpty()) {
             try {
                 scene.setPack(store.activate(id));
+                shownPack = id;
             } catch (Exception e) {
                 android.util.Log.w("HomeActivity", "pack preview failed: " + id, e);
             }
             return;
         }
         scene.setPack(store.activePack());
+    }
+
+    /**
+     * Apply a pack change made in the picker while Home was stopped: one still
+     * rebuild, only when the persisted id moved. Advancing shownPack even on a
+     * fallback render avoids a rebuild on every resume.
+     */
+    private void refreshPack() {
+        try {
+            PackStore store = new PackStore(this);
+            String id = store.active();
+            if (id.equals(shownPack)) return;
+            scene.setPack(store.activePack());
+            shownPack = id;
+        } catch (Exception e) {
+            android.util.Log.w("HomeActivity", "pack refresh failed", e);
+        }
     }
 
     @Override
@@ -405,6 +428,7 @@ public class HomeActivity extends Activity implements SceneView.Listener {
         }
         loadApps();
         buildInputs();
+        refreshPack();
         // Update the clock now, then on every minute boundary.
         tick();
         long now = System.currentTimeMillis();

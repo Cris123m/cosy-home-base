@@ -266,6 +266,12 @@
                 android:text="@string/settings" />
 
             <TextView
+                android:id="@+id/scenes"
+                style="@style/Chip"
+                android:layout_marginStart="8dp"
+                android:text="@string/packs_title" />
+
+            <TextView
                 android:id="@+id/headerTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

@@ -19,6 +19,13 @@
     <string name="key_service_label">Cosy Home remote buttons</string>
     <string name="key_service_description">Opens SmartTube from the remote\'s YouTube button. It only reads the buttons listed in the launcher\'s settings.</string>
 
+    <!-- Scene packs picker. -->
+    <string name="packs_title">Scene packs</string>
+    <string name="pack_activate_failed">Could not activate \"%1$s\"</string>
+    <string name="pack_delete_confirm">Delete \"%1$s\"?</string>
+    <string name="pack_deleted">\"%1$s\" deleted</string>
+    <string name="pack_cannot_delete">The built-in valley cannot be deleted</string>
+
     <!-- Weather conditions (WMO codes from Open-Meteo). -->
     <string name="wx_clear">Clear</string>
     <string name="wx_mostly_clear">Mostly clear</string>

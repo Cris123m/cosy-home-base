@@ -52,6 +52,13 @@
             </intent-filter>
         </activity>
 
+        <!-- Scene pack picker: installed packs with previews, tap to activate, long-press to delete. -->
+        <activity
+            android:name=".PacksActivity"
+            android:exported="false"
+            android:screenOrientation="landscape"
+            android:configChanges="orientation|screenSize|keyboard|keyboardHidden|uiMode" />
+
         <!-- Notification access only to read media sessions for the now playing card; notifications are never read. -->
         <service
             android:name=".MediaListener"

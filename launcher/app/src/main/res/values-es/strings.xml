@@ -17,6 +17,13 @@
     <string name="np_next">Siguiente</string>
     <string name="key_service_label">Botones del control de Cosy Home</string>
     <string name="key_service_description">Abre la app configurada desde los botones del control. Solo lee los botones de los ajustes del launcher.</string>
+
+    <!-- Selector de paquetes de escena. -->
+    <string name="packs_title">Paquetes de escena</string>
+    <string name="pack_activate_failed">No se pudo activar «%1$s»</string>
+    <string name="pack_delete_confirm">¿Eliminar «%1$s»?</string>
+    <string name="pack_deleted">«%1$s» eliminado</string>
+    <string name="pack_cannot_delete">El valle integrado no se puede eliminar</string>
     <string name="wx_clear">Despejado</string>
     <string name="wx_mostly_clear">Mayormente despejado</string>
     <string name="wx_partly_cloudy">Parcialmente nublado</string>
