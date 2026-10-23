@@ -98,6 +98,7 @@ public final class PackStore {
         List<String> rest = new ArrayList<>();
         for (File f : subs) {
             if (f.isDirectory() && !f.getName().startsWith(".")
+                    && f.getName().matches("[a-z0-9][a-z0-9_-]*")
                     && new File(f, PACK_JSON).isFile()) rest.add(f.getName());
         }
         Collections.sort(rest);
@@ -122,6 +123,15 @@ public final class PackStore {
         } catch (IllegalArgumentException e) {
             return new File(dir, "preview.png");
         }
+    }
+
+    /**
+     * Parse {@code id} without touching the persisted active pack: for adb
+     * previews ({@code --es pack}), which render transiently and must not
+     * persist. Throws IllegalArgumentException when unknown or corrupt.
+     */
+    public ScenePack peek(String id) {
+        return load(checkId(id));
     }
 
     // ---- activation -------------------------------------------------------------------------------
@@ -430,13 +440,17 @@ public final class PackStore {
     }
 
     private String displayField(String id, String key, String fallback) {
-        File json = new File(packDir(id), PACK_JSON);
-        if (json.isFile()) {
-            try {
-                String v = new JSONObject(readAll(json)).optString(key, fallback);
-                if (!v.isEmpty()) return v;
-            } catch (Exception ignored) {
+        try {
+            File json = new File(packDir(id), PACK_JSON);
+            if (json.isFile()) {
+                try {
+                    String v = new JSONObject(readAll(json)).optString(key, fallback);
+                    if (!v.isEmpty()) return v;
+                } catch (Exception ignored) {
+                }
             }
+        } catch (IllegalArgumentException ignored) {
+            // Non-conforming folder name (e.g. adb-pushed junk): fall through to the fallback below.
         }
         if (BUILTIN_ID.equals(id)) {
             if ("name".equals(key)) return "Valle";

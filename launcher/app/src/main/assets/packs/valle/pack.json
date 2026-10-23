@@ -20,7 +20,8 @@
     { "op": "rect", "params": [1588, 690, 1601, 716], "color": "h3" },
     { "op": "path", "params": "M1650,782 L1667,728 L1684,782 Z", "color": "h3" },
     { "op": "path", "params": "M1690,784 L1709,716 L1728,784 Z", "color": "h3" },
-    { "op": "path", "params": "M1468,780 L1482,738 L1496,780 Z", "color": "h3" }
+    { "op": "path", "params": "M1468,780 L1482,738 L1496,780 Z", "color": "h3" },
+    { "op": "oval", "params": [1630, 770, 1662, 786], "color": "h3" }
   ],
   "smoke": { "x": 1595, "y": 680 },
   "windows": [

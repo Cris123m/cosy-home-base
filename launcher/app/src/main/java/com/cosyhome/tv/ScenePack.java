@@ -268,6 +268,7 @@ public final class ScenePack {
         ops.add(new Op(Op.PATH, null, PathData.parse("M1650,782 L1667,728 L1684,782 Z"), Op.H3, 0));
         ops.add(new Op(Op.PATH, null, PathData.parse("M1690,784 L1709,716 L1728,784 Z"), Op.H3, 0));
         ops.add(new Op(Op.PATH, null, PathData.parse("M1468,780 L1482,738 L1496,780 Z"), Op.H3, 0));
+        ops.add(new Op(Op.OVAL, new float[]{1630, 770, 1662, 786}, null, Op.H3, 0));
         List<float[]> windows = new ArrayList<>();
         windows.add(new float[]{1540, 738, 1558, 754});
         windows.add(new float[]{1570, 738, 1588, 754});

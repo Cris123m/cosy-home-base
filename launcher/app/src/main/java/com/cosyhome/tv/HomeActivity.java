@@ -86,6 +86,13 @@ public class HomeActivity extends Activity implements SceneView.Listener {
     private boolean appsOpen;
     /** Id the scene last rebuilt for; the picker may move prefs while Home is stopped. */
     private String shownPack;
+    /**
+     * Persisted pack id at the time of an adb preview ({@code --es pack}): the next
+     * resume keeps the transient preview, the one after restores the persisted pack.
+     * Null when no preview is pending. Compared against current prefs so a real
+     * picker activation in between still applies immediately.
+     */
+    private String previewBase;
     /** Survives the activity being recreated while an app is open; resets only with the process. */
     private static int lastDock = 0;
     private static int lastGrid = 0;
@@ -181,6 +188,7 @@ public class HomeActivity extends Activity implements SceneView.Listener {
         findViewById(R.id.back).setOnKeyListener(topRow);
         findViewById(R.id.ambilight).setOnKeyListener(topRow);
         findViewById(R.id.settings).setOnKeyListener(topRow);
+        findViewById(R.id.scenes).setOnKeyListener(topRow);
 
         setUpNowPlaying();
         setUpStatus();
@@ -386,8 +394,12 @@ public class HomeActivity extends Activity implements SceneView.Listener {
         String id = intent == null ? null : intent.getStringExtra("pack");
         if (id != null && !id.isEmpty()) {
             try {
-                scene.setPack(store.activate(id));
+                // Preview only: render without persisting, so the active pack is unchanged.
+                // shownPack tracks the preview so a picker activation in between still
+                // applies; previewBase lets the next resume keep it (one-shot).
+                scene.setPack(store.peek(id));
                 shownPack = id;
+                previewBase = store.active();
             } catch (Exception e) {
                 android.util.Log.w("HomeActivity", "pack preview failed: " + id, e);
             }
@@ -399,13 +411,20 @@ public class HomeActivity extends Activity implements SceneView.Listener {
     /**
      * Apply a pack change made in the picker while Home was stopped: one still
      * rebuild, only when the persisted id moved. Advancing shownPack even on a
-     * fallback render avoids a rebuild on every resume.
+     * fallback render avoids a rebuild on every resume. A pending adb preview
+     * (prefs untouched since the preview) is kept for one resume so it stays
+     * visible; the resume after that restores the persisted pack.
      */
     private void refreshPack() {
         try {
             PackStore store = new PackStore(this);
             String id = store.active();
             if (id.equals(shownPack)) return;
+            if (previewBase != null && id.equals(previewBase)) {
+                previewBase = null;
+                return;
+            }
+            previewBase = null;
             scene.setPack(store.activePack());
             shownPack = id;
         } catch (Exception e) {
