@@ -6,7 +6,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
-import android.graphics.Path;
 import android.graphics.RadialGradient;
 import android.graphics.Shader;
 import android.os.SystemClock;
@@ -32,11 +31,11 @@ public class SceneView extends View {
         void onSceneChanged();
     }
 
-    private static final float W = 1920f, H = 1080f;
+    static final float W = 1920f, H = 1080f;
     private static final long FRAME_MS = 40;
 
     /** Sky stops, three hill colours, window colour, window glow strength, dark clock text. */
-    private static final class Palette {
+    static final class Palette {
         final int s1, s2, s3, h1, h2, h3, win;
         final float glow;
         final boolean darkText;
@@ -54,14 +53,11 @@ public class SceneView extends View {
         }
     }
 
-    private static final Palette DAWN = new Palette(0xFF2E3A6B, 0xFFC98A9A, 0xFFF6C99A,
-            0xFF7C6A93, 0xFF54497A, 0xFF2E2A4E, 0xFFFFC27A, 0.5f, false);
-    private static final Palette DAY = new Palette(0xFF4F9CCB, 0xFF93C6E4, 0xFFD8EEF6,
-            0xFF8DB59A, 0xFF64957A, 0xFF3F6E55, 0xFF2B3A40, 0f, true);
-    private static final Palette DUSK = new Palette(0xFF2F2350, 0xFFB4506A, 0xFFF2A65A,
-            0xFF7A4560, 0xFF4E2C4A, 0xFF24162E, 0xFFFFB35C, 0.75f, false);
-    private static final Palette NIGHT = new Palette(0xFF04060E, 0xFF0B1230, 0xFF1A2550,
-            0xFF161D36, 0xFF0E1326, 0xFF070A14, 0xFFFFB35C, 1f, false);
+    private Phase phase = Phase.NIGHT;
+    private Palette pal;
+    private Sky sky = Sky.PARTLY;
+    private ScenePack pack;
+    private final ForegroundRenderer foreground = new ForegroundRenderer();
 
     private static final float[][] STARS = {
             {180, 90, 2}, {420, 180, 1.6f}, {690, 70, 2.2f}, {930, 150, 1.4f}, {1150, 60, 2},
@@ -77,9 +73,6 @@ public class SceneView extends View {
             {1300, 300, 200, 40}, {1400, 280, 110, 44}, {1620, 170, 180, 42}, {1720, 150, 100, 46},
             {620, 470, 150, 28}, {1500, 520, 140, 24}};
 
-    private Phase phase = Phase.NIGHT;
-    private Palette pal = NIGHT;
-    private Sky sky = Sky.PARTLY;
     /** Number of rain drops or snowflakes drawn per frame. */
     private int precip;
     private Bitmap still;
@@ -91,31 +84,38 @@ public class SceneView extends View {
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     /** For the per-frame stars, clouds and smoke, whose colours carry their own fades. */
     private final Paint fx = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Path far = new Path(), mid = new Path(), near = new Path();
 
     public SceneView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        far.moveTo(0, 720);
-        far.cubicTo(240, 640, 420, 660, 640, 700);
-        far.cubicTo(860, 740, 1040, 640, 1280, 650);
-        far.cubicTo(1500, 660, 1700, 720, 1920, 690);
-        closeToBottom(far);
-        mid.moveTo(0, 820);
-        mid.cubicTo(260, 760, 520, 790, 760, 820);
-        mid.cubicTo(1000, 850, 1240, 760, 1500, 770);
-        mid.cubicTo(1700, 778, 1820, 800, 1920, 790);
-        closeToBottom(mid);
-        near.moveTo(0, 940);
-        near.cubicTo(300, 880, 640, 900, 900, 930);
-        near.cubicTo(1160, 960, 1440, 900, 1700, 905);
-        near.cubicTo(1800, 907, 1880, 915, 1920, 920);
-        closeToBottom(near);
+        pack = loadBuiltin(context);
+        pal = toPalette(phaseColors(Phase.NIGHT));
     }
 
-    private static void closeToBottom(Path p) {
-        p.lineTo(W, H);
-        p.lineTo(0, H);
-        p.close();
+    /** The builtin valley, parsed from assets once; code constants only if the asset fails. */
+    private static ScenePack loadBuiltin(Context context) {
+        try {
+            java.io.InputStream in = context.getAssets().open("packs/valle/pack.json");
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream(4096);
+            byte[] buf = new byte[1024];
+            int n;
+            while ((n = in.read(buf)) >= 0) out.write(buf, 0, n);
+            in.close();
+            return ScenePack.fromJson(out.toString("UTF-8"));
+        } catch (Exception e) {
+            android.util.Log.w("SceneView", "builtin valle asset failed, using code fallback", e);
+            return ScenePack.builtinValle();
+        }
+    }
+
+    private ScenePack.PackPalette phaseColors(Phase p) {
+        String name = p == Phase.DAWN ? "dawn" : p == Phase.DAY ? "day" : p == Phase.DUSK ? "dusk" : "night";
+        ScenePack.PackPalette pp = pack.paletteFor(name, null);
+        if (pp == null) pp = ScenePack.builtinValle().paletteFor(name, null);
+        return pp;
+    }
+
+    private static Palette toPalette(ScenePack.PackPalette pp) {
+        return new Palette(pp.s1, pp.s2, pp.s3, pp.h1, pp.h2, pp.h3, pp.win, pp.glow, pp.darkText);
     }
 
     void setListener(Listener l) {
@@ -139,7 +139,15 @@ public class SceneView extends View {
     void setPhase(Phase p) {
         if (p == phase && still != null) return;
         phase = p;
-        pal = p == Phase.DAWN ? DAWN : p == Phase.DAY ? DAY : p == Phase.DUSK ? DUSK : NIGHT;
+        pal = toPalette(phaseColors(p));
+        rebuild();
+    }
+
+    /** Switch the still-layer foreground to another pack (one rebuild, ~1 frame hitch). */
+    void setPack(ScenePack p) {
+        if (p == null) return;
+        pack = p;
+        pal = toPalette(phaseColors(phase));
         rebuild();
     }
 
@@ -177,27 +185,6 @@ public class SceneView extends View {
         return sky == Sky.CLOUDY || sky == Sky.RAIN || sky == Sky.SNOW || sky == Sky.STORM || sky == Sky.FOG;
     }
 
-    // Purpose: how far the sky colours are washed towards grey for this weather.
-    private float greyness() {
-        switch (sky) {
-            case CLOUDY: return 0.55f;
-            case FOG: return 0.6f;
-            case RAIN: return 0.65f;
-            case SNOW: return 0.5f;
-            case STORM: return 0.75f;
-            default: return 0f;
-        }
-    }
-
-    // Purpose: a colour washed towards its own grey, darker for rain and storm.
-    private int grey(int c, float amount) {
-        if (amount <= 0) return c;
-        int l = Math.round(0.3f * Color.red(c) + 0.59f * Color.green(c) + 0.11f * Color.blue(c));
-        if (sky == Sky.STORM || sky == Sky.RAIN) l = Math.round(l * 0.82f);
-        if (sky == Sky.SNOW || sky == Sky.FOG) l = Math.min(255, Math.round(l * 1.08f + 10));
-        return lerp(c, Color.rgb(l, l, Math.min(255, l + 6)), amount);
-    }
-
     /** Frees the full-screen still while an app is in front; the next {@link #setPhase} redraws it. */
     void release() {
         still = null;
@@ -232,8 +219,9 @@ public class SceneView extends View {
     // ---- the still layers -------------------------------------------------------------------------
 
     private void drawStill(Canvas c) {
-        float g = greyness();
-        paint.setShader(new LinearGradient(0, 0, 0, H, new int[]{grey(pal.s1, g), grey(pal.s2, g), grey(pal.s3, g)},
+        float g = ForegroundRenderer.greyness(sky);
+        paint.setShader(new LinearGradient(0, 0, 0, H, new int[]{ForegroundRenderer.grey(pal.s1, g, sky),
+                ForegroundRenderer.grey(pal.s2, g, sky), ForegroundRenderer.grey(pal.s3, g, sky)},
                 new float[]{0f, 0.6f, 1f}, Shader.TileMode.CLAMP));
         c.drawRect(0, 0, W, H, paint);
         paint.setShader(null);
@@ -261,55 +249,8 @@ public class SceneView extends View {
                 break;
         }
 
-        // Hills lose a little colour under a grey sky, less than the sky itself.
-        float hg = g * 0.35f;
-        fill(c, far, hill(pal.h1, hg, 0.55f));
-        if (sky == Sky.FOG) {
-            fogBank(c, 300, 420, 0.45f);
-            fogBank(c, 560, 320, 0.9f);
-        }
-        fill(c, mid, hill(pal.h2, hg, 0.6f));
-
-        if (pal.glow > 0) {
-            int a = Math.round(pal.glow * 0x99);
-            int core = (a << 24) | (pal.win & 0xFFFFFF);
-            paint.setShader(new RadialGradient(1564, 746, 110, core, pal.win & 0xFFFFFF, Shader.TileMode.CLAMP));
-            c.drawCircle(1564, 746, 110, paint);
-            paint.setShader(null);
-        }
-
-        // Cottage, chimney and a few trees on the middle ridge.
-        paint.setColor(pal.h3);
-        c.drawRect(1520, 722, 1610, 778, paint);
-        Path roof = new Path();
-        roof.moveTo(1508, 726);
-        roof.lineTo(1565, 684);
-        roof.lineTo(1622, 726);
-        roof.close();
-        c.drawPath(roof, paint);
-        c.drawRect(1588, 690, 1601, 716, paint);
-        tree(c, 1650, 782, 34, 54);
-        tree(c, 1690, 784, 38, 68);
-        tree(c, 1468, 780, 28, 42);
-        paint.setColor(pal.win);
-        c.drawRect(1540, 738, 1558, 754, paint);
-        c.drawRect(1570, 738, 1588, 754, paint);
-
-        fill(c, near, hill(pal.h3, 0f, 0.65f));
-
-        // Fog drifts low over the valley.
-        if (sky == Sky.FOG) {
-            fogBank(c, 740, 260, 0.85f);
-            fogBank(c, 880, 200, 0.5f);
-        }
-    }
-
-    // Purpose: a hill colour, turned snowy under snowfall (the nearer the hill, the more snow shows).
-    private int hill(int c, float hg, float snow) {
-        int base = grey(c, hg);
-        if (sky != Sky.SNOW) return base;
-        int white = phase == Phase.NIGHT ? 0xFF3A4258 : phase == Phase.DAY ? 0xFFE4EAF0 : 0xFFB8B0C4;
-        return lerp(base, white, snow);
+        // The still-layer foreground (hills, cottage, trees, windows) belongs to the active pack.
+        foreground.render(c, pack, pal, sky, phase);
     }
 
     // Purpose: a soft radial brightening with no disc, for a sun behind cloud.
@@ -317,16 +258,6 @@ public class SceneView extends View {
         int a = Math.round(alpha * 255) << 24;
         paint.setShader(new RadialGradient(x, y, r, a | (color & 0xFFFFFF), color & 0xFFFFFF, Shader.TileMode.CLAMP));
         c.drawCircle(x, y, r, paint);
-        paint.setShader(null);
-    }
-
-    // Purpose: a horizontal band of fog, densest in the middle, fading up and down.
-    private void fogBank(Canvas c, float top, float height, float alpha) {
-        int fog = phase == Phase.NIGHT ? 0x8090A0 : phase == Phase.DAY ? 0xE6EAEE : 0xC8BCC4;
-        int a = Math.round(alpha * 255) << 24;
-        paint.setShader(new LinearGradient(0, top, 0, top + height, new int[]{fog, a | fog, fog},
-                new float[]{0f, 0.55f, 1f}, Shader.TileMode.CLAMP));
-        c.drawRect(0, top, W, top + height, paint);
         paint.setShader(null);
     }
 
@@ -339,31 +270,11 @@ public class SceneView extends View {
         c.drawCircle(x, y, r, paint);
     }
 
-    private void tree(Canvas c, float x, float baseY, float w, float h) {
-        Path p = new Path();
-        p.moveTo(x, baseY);
-        p.lineTo(x + w / 2, baseY - h);
-        p.lineTo(x + w, baseY);
-        p.close();
-        c.drawPath(p, paint);
-    }
-
-    private void fill(Canvas c, Path p, int color) {
-        paint.setColor(color);
-        c.drawPath(p, paint);
-    }
-
     /** The sky gradient's colour at a design-space height. */
     private int skyAt(float y) {
         float t = y / H;
-        return t < 0.6f ? lerp(pal.s1, pal.s2, t / 0.6f) : lerp(pal.s2, pal.s3, (t - 0.6f) / 0.4f);
-    }
-
-    private static int lerp(int a, int b, float t) {
-        return Color.rgb(
-                Math.round(Color.red(a) + (Color.red(b) - Color.red(a)) * t),
-                Math.round(Color.green(a) + (Color.green(b) - Color.green(a)) * t),
-                Math.round(Color.blue(a) + (Color.blue(b) - Color.blue(a)) * t));
+        return t < 0.6f ? ForegroundRenderer.lerp(pal.s1, pal.s2, t / 0.6f)
+                : ForegroundRenderer.lerp(pal.s2, pal.s3, (t - 0.6f) / 0.4f);
     }
 
     // ---- each frame -------------------------------------------------------------------------------
@@ -463,12 +374,6 @@ public class SceneView extends View {
     }
 
     private void drawSmoke(Canvas c, float s) {
-        for (int i = 0; i < 3; i++) {
-            float t = ((s + i * 2.33f) % 7f) / 7f;              // 0..1 over a 7 s rise
-            float alpha = t < 0.2f ? t / 0.2f * 0.45f : 0.45f * (1 - (t - 0.2f) / 0.8f);
-            float r = 10 * (0.6f + 1.1f * t);
-            fx.setColor(Color.argb(Math.round(alpha * 255), 0xD8, 0xD2, 0xE2));
-            c.drawCircle(1595 + 34 * t, 680 - 130 * t, r, fx);
-        }
+        foreground.drawSmoke(c, pack, s, fx);
     }
 }
